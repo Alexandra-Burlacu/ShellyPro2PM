@@ -1,0 +1,66 @@
+# The following script overwrites an active schedule. The schedule is set as: 
+# Weekdays: Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday
+# Time: 1st schedule: turn on at 07:00; 2nd schedule: turn off 15 minutes past sunrise; 3rd schedule: turn on 15 minutes before sunset, 4th schedule turn off at 19:00
+# Adjusts the days, times, actions as required.
+
+
+import requests
+
+# Define the URL of your Shelly device
+url = "http://<device_ip>/settings/schedules"
+
+# Define the new schedule configuration
+new_schedule = {
+    "jobs": [
+        {
+            "id": 1,
+            "enable": True,
+            "timespec": "0 0 7 * * SUN,MON,TUE,WED,THU,FRI,SAT",
+            "calls": [
+                {"method": "Switch.Set", "params": {"id": 1, "on": True}}
+            ]
+        },
+        {
+            "id": 2,
+            "enable": True,
+            "timespec": "@sunrise+00h15m * * SUN,MON,TUE,WED,THU,FRI,SAT",
+            "calls": [
+                {"method": "Switch.Set", "params": {"id": 1, "on": False}}
+            ]
+        },
+        {
+            "id": 3,
+            "enable": True,
+            "timespec": "@sunset-00h15m * * SUN,MON,TUE,WED,THU,FRI,SAT",
+            "calls": [
+                {"method": "Switch.Set", "params": {"id": 1, "on": True}}
+            ]
+        },
+        {
+            "id": 4,
+            "enable": True,
+            "timespec": "0 0 19 * * SUN,MON,TUE,WED,THU,FRI,SAT",
+            "calls": [
+                {"method": "Switch.Set", "params": {"id": 1, "on": False}}
+            ]
+        }
+    ],
+    "rev": 16  # Increment the revision number to overwrite the previous schedule
+}
+
+# Send the POST request to update the schedule
+response = requests.post(url, json=new_schedule)
+
+# Check the response status code
+if response.status_code == 200:
+    print("Schedule updated successfully.")
+else:
+    print(f"Failed to update schedule. Status code: {response.status_code}")
+    
+# Adjust <device_ip> according to the IP address of the Shelly. For example: url = "http://192.168.1.5/settings/schedules"
+# Make sure you increment the "rev"! Adjust it based on the current revision number to ensure that the schedule gets overwritten successfully.
+# "rev" refers to the revision number of the schedule configuration. 
+# Each time you make a change to the schedule and update it, you need to increment the "rev" value to indicate that a new version of the schedule is being saved.
+# Save the script.
+# Go back to the Scripts and make sure you enable the last script
+
